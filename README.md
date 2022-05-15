@@ -36,7 +36,6 @@ Small introduction to the TDD process and mindset and a simple example using Go.
 
 After a requirement definition, a new unit test is created and the Red, Green, Refactor cycle starts.
 
-
 The "red, green, refactor" cycle has 3 different stages:
 
 - 🔴: A test for a function is failing
@@ -49,23 +48,23 @@ The "red, green, refactor" cycle has 3 different stages:
 
 ---
 
-# In practice in Go:
+# In practice in Go
 
 1. Write a test for a function (ideally before writing the function) 🔴
 
-  - See the test failing
-     - If no function exists, there will be a compilation error
-       - Make the compiler pass by creating the function
-     - If the function exists, the compiler must pass
-       -  Run the test, see it fails and check if it fails for the expected reason.
-       - Check for the failure message to be accurate
-
+- See the test failing
+  - If no function exists, there will be a compilation error
+    - Make the compiler pass by creating the function
+  - If the function exists, the compiler must pass
+    - Run the test, see it fails and check if it fails for the expected reason.
+    - Check for the failure message to be accurate
+<br>
 
 2. Write enough code to make the test pass 🟢
 <br>
-<br>
 3. Refactor 🔨
     - Improve the code without breaking the test
+<br>
 
 We can go through this cycle many times until a final version of the function is implemented.
 
@@ -78,7 +77,7 @@ A function with a complicated behaviour is easily testable and implemented if we
 Writing a test is just like writing a function, with a few rules
 
 - It needs to be in a file with a name like `xxx_test.go`
-    - Go uses this filename pattern to recognise source code files that contain tests.
+  - Go uses this filename pattern to recognise source code files that contain tests.
 <br>
 - The test function must start with the word `Test`
 <br>
@@ -89,10 +88,11 @@ Writing a test is just like writing a function, with a few rules
 ```go
   func TestAdd(t *testing.T) {...}
 ```
-    
+
 ---
 
 # Writing tests (with standard testing library)
+
 A test function must declare the expected result and compare it to the returned result from the function being tested
 
 #### The `want` and `got` pattern
@@ -121,71 +121,102 @@ func TestAdd(t *testing.T) {
 ---
 
 # Table-driven tests
-A series of related checks can be implemented by looping over a slice of test cases:
 
-```go
-func TestAdd(t *testing.T) {
-    t.Parallel()
-    testCases := []struct {
-        a, b float64
-        want float64
-    }{
-        {a: 2, b: 2, want: 4},
-        {a: 1, b: 1, want: 2},
-        {a: 5, b: 0, want: 5},
-    }
-
-    for _, tc := range testCases {
-        got, err := calculator.Add(tc.a, tc.b)
-
-        if err != nil {
-            t.Fatalf("Add(%f, %f): want no error for valid input, got %v", tc.a, tc.b, err)
-        }
-        if tc.want != got {
-            t.Errorf("Add(%f, %f): want %f, got %f", tc.a, tc.b, tc.want, got)
-        }
-    }
-}
-```
+A series of related checks can be implemented by looping over a slice of test cases.
 
 This approach reduces the amount of repetitive code compared to repeating the same code for each test
 and makes it more straightforward to add more test cases.
 
----
-
-# Subtests
-`t.Run` method for creating subtests. This test is a rewritten version of the earlier example using subtests:
-
 ```go
-func TestAdd(t *testing.T) {
-    t.Parallel()
-    testCases := []struct {
-        a, b float64
-        want float64
-    }{
-        {a: 2, b: 2, want: 4},
-        {a: 1, b: 1, want: 2},
-        {a: 5, b: 0, want: 5},
-    }
-    for _, tc := range testCases {
-        t.Run(fmt.Sprintf("Add %f plus %f", tc.a, tc.b), func(t *testing.T) {
-            got, err := calculator.Add(tc.a, tc.b)
+func TestDivide(t *testing.T) {
+  t.Parallel()
+  testCases := []struct {
+    a, b float64
+    want float64
+    err  error
+  }{
+    {a: 10, b: 5, want: 2, err: nil},
+    {a: 120, b: 0, want: 0.0, err: errors.New("division by zero not allowed")},
+    {a: 99, b: 0, want: 0.0, err: errors.New("division by zero not allowed")},
+    {a: 9, b: 3, want: 3, err: nil},
+  }
 
-            if err != nil {
-                t.Fatalf("Add(%f, %f): want no error for valid input, got %v", tc.a, tc.b, err)
-            }
-            if tc.want != got {
-                t.Errorf("Add(%f, %f): want %f, got %f", tc.a, tc.b, tc.want, got)
-            }
-        })
+  for _, tc := range testCases {
+    got, err := calculator.Divide(tc.a, tc.b)
+
+    if err != nil {
+      t.Fatalf("Divide(%f, %f): want no error for valid input, got %v", tc.a, tc.b, err)
     }
+
+    if tc.want != got {
+      t.Errorf("Divide(%f, %f): want %f, got %f", tc.a, tc.b, tc.want, got)
+    }
+  }
 }
+```
+### Output
+```bash
+--- FAIL: TestDivide (0.00s)
+    calculator_test.go:27: Divide(120.000000, 0.000000): want no error for valid input, got division by zero not allowed
+FAIL
+exit status 1
+FAIL    calculator      0.005s
 ```
 
 ---
 
 # Subtests
-The first thing to note is the difference in output from the two implementations. The original implementation prints:
+
+We can use the `t.Run` method for creating subtests. 
+
+This test is a rewritten version of the earlier example using subtests:
+
+```go
+func TestDivide(t *testing.T) {
+  t.Parallel()
+  testCases := []struct {
+    a, b float64
+    want float64
+    err  error
+  }{
+    {a: 10, b: 5, want: 2, err: nil},
+    {a: 120, b: 0, want: 0.0, err: errors.New("division by zero not allowed")},
+    {a: 99, b: 0, want: 0.0, err: errors.New("division by zero not allowed")},
+    {a: 9, b: 3, want: 3, err: nil},
+  }
+ 
+  for _, tc := range testCases {
+    t.Run(fmt.Sprintf("Divide %f by %f", tc.a, tc.b), func(t *testing.T) {
+      got, err := calculator.Divide(tc.a, tc.b)
+
+      if err != nil {
+        t.Fatalf("Divide(%f, %f): want no error for valid input, got %v", tc.a, tc.b, err)
+      }
+    
+      if tc.want != got {
+        t.Errorf("Divide(%f, %f): want %f, got %f", tc.a, tc.b, tc.want, got)
+      }
+    })
+  }
+}
+```
+### Output
+```bash
+--- FAIL: TestDivide (0.00s)
+    --- FAIL: TestDivide/Divide_120.000000_by_0.000000 (0.00s)
+        calculator_test.go:52: Divide(120.000000, 0.000000): want no error for valid input, got division by zero not allowed
+    --- FAIL: TestDivide/Divide_99.000000_by_0.000000 (0.00s)
+        calculator_test.go:52: Divide(99.000000, 0.000000): want no error for valid input, got division by zero not allowed
+FAIL
+exit status 1
+FAIL    calculator      0.005s
+```
+
+---
+
+# Subtests
+
+There's now a difference in output from the two implementations. The original implementation prints:
 
 ```bash
 --- FAIL: TestDivide (0.00s)
@@ -197,7 +228,8 @@ FAIL    calculator      0.005s
 
 Even though there are two errors, execution of the test halts on the call to `Fatalf` and the second test never runs.
 
-The implementation using `Run` prints both:
+
+The implementation using `t.Run` prints both:
 
 ```bash
 --- FAIL: TestDivide (0.00s)
@@ -212,14 +244,11 @@ FAIL    calculator      0.005s
 
 `Fatal` and its siblings causes a subtest to be skipped but not its parent or subsequent subtests.
 
-### avoid different tests for the same happy path
-
-- ex: two test cases of adding positive numbers
-  - this is unnecessary because the base condition doesn't change
+---
 
 ### references
 
-<https://go.dev/blog/subtests>
+<https://go.dev/blog/subtests>>
 
 <https://quii.gitbook.io/learn-go-with-tests/>
 

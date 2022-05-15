@@ -1,6 +1,9 @@
 package calculator
 
-import "errors"
+import (
+	"errors"
+	"math"
+)
 
 // Divide returns the quotient of a and b.
 func Divide(a, b float64) (float64, error) {
@@ -30,5 +33,5 @@ func Sqrt(a float64) (float64, error) {
 	if a < 0 {
 		return 0, errors.New("square root of negative number not allowed")
 	}
-	return a * a, nil
+	return math.Sqrt(a), nil
 }
