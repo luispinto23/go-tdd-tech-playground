@@ -1,8 +1,8 @@
 ---
-theme: ./ui/themes/dracula.json
-author: Luís Pinto
-paging: Slide %d / %d
+marp: true
+paginate: true
 ---
+
 # What to expect?
 
 Small introduction to the TDD process and mindset and a simple example using Go.
@@ -20,15 +20,12 @@ Small introduction to the TDD process and mindset and a simple example using Go.
   - based on automated tests
 <br>
 - Useful to prevent  regressions
-  - When refactoring code we must not be changing it's behaviour,
-    - using tests will give us the confidence that we can reshape code without worrying about that
 <br>
 - Documentation for humans as to how the system should behave
 <br>
 - Much faster and more reliable feedback than manual testing
 <br>
 - Allows for a more modular design and architecture
-  - TDD helps developers understand and learn the principles of modular design when writing tests for very small features. In this way, problems in the application’s architecture can be detected at an early stage of development.
 
 ---
 
@@ -39,11 +36,9 @@ After a requirement definition, a new unit test is created and the Red, Green, R
 The "red, green, refactor" cycle has 3 different stages:
 
 - 🔴: A test for a function is failing
-<br>
-<br>
+
 - 🟢: the test is passing
-<br>
-<br>
+
 - 🔨: improve the code quality of the code that made the test pass, without breaking the test
 
 ---
@@ -58,17 +53,12 @@ The "red, green, refactor" cycle has 3 different stages:
   - If the function exists, the compiler must pass
     - Run the test, see it fails and check if it fails for the expected reason.
     - Check for the failure message to be accurate
-<br>
 
 2. Write enough code to make the test pass 🟢
-<br>
 3. Refactor 🔨
     - Improve the code without breaking the test
-<br>
 
 We can go through this cycle many times until a final version of the function is implemented.
-
-A function with a complicated behaviour is easily testable and implemented if we can break such behaviour in smaller parts and test accordingly.
 
 ---
 
@@ -78,12 +68,8 @@ Writing a test is just like writing a function, with a few rules
 
 - It needs to be in a file with a name like `xxx_test.go`
   - Go uses this filename pattern to recognise source code files that contain tests.
-<br>
 - The test function must start with the word `Test`
-<br>
 - The test function takes one argument only `t *testing.T`
-<br>
-<br>
 
 ```go
   func TestAdd(t *testing.T) {...}
@@ -110,12 +96,11 @@ func TestAdd(t *testing.T) {
 }
 ```
 
+---
 - If `want` and `got` are different, something is wrong with our function and the test will fail
-<br>
-<br>
+
 - If they are equal, the test will pass and the function ends
-<br>
-<br>
+
 - Test functions don’t return anything
 
 ---
@@ -124,8 +109,9 @@ func TestAdd(t *testing.T) {
 
 A series of related checks can be implemented by looping over a slice of test cases.
 
-This approach reduces the amount of repetitive code compared to repeating the same code for each test
-and makes it more straightforward to add more test cases.
+This approach reduces the amount of repetitive code compared to repeating the same code for each test and makes it more straightforward to add more test cases.
+
+---
 
 ```go
 func TestDivide(t *testing.T) {
@@ -154,6 +140,8 @@ func TestDivide(t *testing.T) {
   }
 }
 ```
+
+---
 ### Output
 ```bash
 --- FAIL: TestDivide (0.00s)
@@ -167,10 +155,11 @@ FAIL    calculator      0.005s
 
 # Subtests
 
-We can use the `t.Run` method for creating subtests. 
+We can use the `t.Run` method for creating subtests.
 
 This test is a rewritten version of the earlier example using subtests:
 
+---
 ```go
 func TestDivide(t *testing.T) {
   t.Parallel()
@@ -186,7 +175,9 @@ func TestDivide(t *testing.T) {
   }
  
   for _, tc := range testCases {
+    tc := tc // capture range variable
     t.Run(fmt.Sprintf("Divide %f by %f", tc.a, tc.b), func(t *testing.T) {
+      t.Parallel()
       got, err := calculator.Divide(tc.a, tc.b)
 
       if err != nil {
@@ -200,16 +191,18 @@ func TestDivide(t *testing.T) {
   }
 }
 ```
-### Output
+
+---
+## Output
 ```bash
 --- FAIL: TestDivide (0.00s)
-    --- FAIL: TestDivide/Divide_120.000000_by_0.000000 (0.00s)
-        calculator_test.go:52: Divide(120.000000, 0.000000): want no error for valid input, got division by zero not allowed
     --- FAIL: TestDivide/Divide_99.000000_by_0.000000 (0.00s)
-        calculator_test.go:52: Divide(99.000000, 0.000000): want no error for valid input, got division by zero not allowed
+        calculator_test.go:40: Divide(99.000000, 0.000000): want no error for valid input, got division by zero not allowed
+    --- FAIL: TestDivide/Divide_120.000000_by_0.000000 (0.00s)
+        calculator_test.go:40: Divide(120.000000, 0.000000): want no error for valid input, got division by zero not allowed
 FAIL
 exit status 1
-FAIL    calculator      0.005s
+FAIL    calculator      0.004s
 ```
 
 ---
@@ -226,30 +219,95 @@ exit status 1
 FAIL    calculator      0.005s
 ```
 
-Even though there are two errors, execution of the test halts on the call to `Fatalf` and the second test never runs.
+Even though there are two errors, execution of the test halts on the call to `Fatalf` and the second test case never runs.
 
-
+---
 The implementation using `t.Run` prints both:
 
 ```bash
 --- FAIL: TestDivide (0.00s)
-    --- FAIL: TestDivide/Divide_120.000000_by_0.000000 (0.00s)
-        calculator_test.go:52: Divide(120.000000, 0.000000): want no error for valid input, got division by zero not allowed
     --- FAIL: TestDivide/Divide_99.000000_by_0.000000 (0.00s)
-        calculator_test.go:52: Divide(99.000000, 0.000000): want no error for valid input, got division by zero not allowed
+        calculator_test.go:40: Divide(99.000000, 0.000000): want no error for valid input, got division by zero not allowed
+    --- FAIL: TestDivide/Divide_120.000000_by_0.000000 (0.00s)
+        calculator_test.go:40: Divide(120.000000, 0.000000): want no error for valid input, got division by zero not allowed
 FAIL
 exit status 1
-FAIL    calculator      0.005s
+FAIL    calculator      0.004s
 ```
 
 `Fatal` and its siblings causes a subtest to be skipped but not its parent or subsequent subtests.
 
 ---
+We also can use the `t.Run` method to create subtests with a more descriptive name and pick out a specific subtest to run.
+
+```bash
+go test -run TestDivide/floatdivision
+```
+
+---
+```go
+func TestDivide(t *testing.T) {
+  testCases := []struct {
+    name string
+    a, b float64
+    want float64
+    err  error
+  }{
+    {name: "floatdivision", a: 10, b: 5, want: 2},
+    {name: "dividebyzero", a: 120, b: 0, want: 0.0},
+  }
+ 
+  for _, tc := range testCases {
+    tc := tc // capture range variable
+    tf := func(t *testing.T) {
+      t.Parallel()
+      t.Log(tc.name
+      got, err := calculator.Divide(tc.a, tc.b)
+
+      if err != nil {
+        t.Fatalf("Divide(%f, %f): want no error for valid input, got %v", tc.a, tc.b, err)
+      }
+    
+      if tc.want != got {
+        t.Errorf("Divide(%f, %f): want %f, got %f", tc.a, tc.b, tc.want, got)
+      }
+    
+    }
+    t.Run(tc.name, tf)
+  }
+}
+```
+
+---
+
+# Test coverage
+
+We can get the test coverage of our code by running `go test -cover`.
+
+If we want to know what's covered by a specific test, we can use the `-coverprofile` flag and specify a file name for the profile output.
+  
+  ```bash
+  go test -coverprofile=coverage.out
+  ```
+---
+One way to view the coverage is to use the `go tool cover` command and pass the profile file as an argument and the `-html` flag.
+
+```bash
+go tool cover -html=coverage.out
+```
+
+this will open a web browser with the coverage report.
+
+It's also possible to generate an HTML report with `go tool cover -html=coverage.out -o coverage.html`.
+
+---
 
 ### references
-
-<https://go.dev/blog/subtests>>
 
 <https://quii.gitbook.io/learn-go-with-tests/>
 
 <https://www.youtube.com/watch?v=Bt1ZA82SF4o>
+
+<https://go.dev/blog/subtests>
+
+<https://www.gopherguides.com/articles/table-driven-testing-in-parallel>
