@@ -310,4 +310,6 @@ It's also possible to generate an HTML report with `go tool cover -html=coverage
 
 <https://go.dev/blog/subtests>
 
+<https://gist.github.com/posener/92a55c4cd441fc5e5e85f27bca008721>
+
 <https://www.gopherguides.com/articles/table-driven-testing-in-parallel>
